@@ -2,10 +2,6 @@
   (:require [day1 :refer [fetch-input read-lines]]
             [clojure.string :as str]))
 
-(->> (fetch-input 3)
-    read-lines
-(take 2))
-
 (def input ["467..114.."
             "...*......"
             "..35..633."
@@ -16,6 +12,23 @@
             "......755."
             "...$.*...."
             ".664.598.."])
+(->> ["467..114.."
+      "...*......"
+      "..35..633."
+      "......#..."
+      "617*......"
+      ".....+.58."
+      "..592....."
+      "......755."
+      "...$.*...."
+      ".664.598.."]
+     (map-indexed vector)
+     (reduce
+      (fn [acc [line input]]
+        (for [[col number] (map-indexed vector input)]
+          (assoc acc col number))) {}))
+(= [1 2] [1 2]) ;; => true
+(= [1 2] [2 1]) ;; => false
 (+ 467 35 633 617 592 755 664 598)
 ;; => 4361
 
@@ -113,30 +126,29 @@
  "......$..*755.."
  "..66$4*598...")
 
-#_
-((["467*" nil nil "467" nil] ["114." nil nil "114" nil])
- (["3*5" "3" "5" nil nil] ["633." nil nil "633" nil])
- (["35." nil nil "35" nil] ["6#33" "6" "33" nil nil])
- (["617*" nil nil "617" nil])
- (["617*" nil nil "617" nil] ["58." nil nil "58" nil])
- (["592+" nil nil "592" nil] ["58." nil nil "58" nil])
- (["592." nil nil "592" nil] ["755." nil nil "755" nil])
- (["755." nil nil "755" nil])
- (["66$4" "66" "4" nil nil] ["598." nil nil "598" nil]))
-
-
-
 (defn with-dot? [x]
   (or (nil? x) (str/includes? x ".")))
+;; (def r7 #"(?<=\d)\.(?=\d)")
+#_(def r7 #"(?<=\d)\.")
+(def r7 #"\.(\d+)")
+#_
+("4.6.7..*..1.1.4....."
+ ".....3*5.....6.3.3.."
+ "....3.5.....6#3.3..."
+ ".6.1.7.*....#......."
+ "6.1.7.*....+...5.8.."
+ ".....5.9.2+...5.8..."
+ "....5.9.2....7.5.5.."
+ ".......$...*7.5.5..."
+ "...6.6$4..*5.9.8....")
 
 (->> input
-     (map seq)
      (partition 2 1)
      (map (partial map (partial apply str)))
      (map (partial apply interleave))
      (map (partial apply str))
-     (map #(str/replace % r2 ""))
-     (map (partial re-seq r6)) ;; not quite the regex I want so processing below
+     (map #(str/replace % r7 "")) ;; remove dot only if adjacent to a number
+     ;; (map (partial re-seq r5))
      ;; (map (juxt (comp first first) (comp first second)))
      ;; (mapcat (partial remove with-dot?))
      ;; (map (partial re-seq nums))
