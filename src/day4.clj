@@ -20,6 +20,7 @@
      (map (comp worth count))
      (remove nil?)
      (reduce +))
+;; => 25571
 
 (def input
   [
@@ -46,17 +47,17 @@
         count)])
 
 (defn subsequent-card-nums [[card-number how-many]]
-  (take how-many (iterate inc (inc card-number))))
+  (cons card-number (take how-many (iterate inc (inc card-number)))))
 
 (defn debug [path x] (prn path x) x)
 
-(let [{:keys [copies state]}
+#_(let [{:keys [copies state]}
       (reduce
        (fn [{:keys [state copies]} line]
          (let [[card-number matched] (card-and-matching-numbers line)]
            {:state (assoc state card-number matched)
             :copies (assoc copies card-number (subsequent-card-nums [card-number matched]))}))
-       {:state {}   ;; card number -> macthed count
+       {:state {}   ;; card number -> matched count
         :copies {}} ;; card number -> winning copies of scratchcards
        input
        #_(read-lines (fetch-input 4)))]
@@ -67,12 +68,55 @@
            acc
            (debug "original" [k]) ;; original card
            (debug "subsequent" vs)  ;; subsequent winning (cardstacks)
-           (debug "recur" (mapcat #(subsequent-card-nums [% (state %)]) vs)) ;; copies of copies
+           vs
+           (debug "recur" (mapcat #(subsequent-card-nums [% (state %)]) vs)) ;; copies of subsequent
            ))
         []
         (debug "copies" copies))
-       flatten
-       (group-by identity)
-       vals
-       (mapcat identity)
-       count))
+       ;; flatten
+       ;; (group-by identity)
+       ;; vals
+       ;; (mapcat identity)
+       #_count))
+
+#_(let [state (reduce (fn [acc line]
+                      (let [[card matched] (card-and-matching-numbers line)]
+                        (assoc acc card matched))) {} input)]
+  #_{1 4, 2 2, 3 2, 4 1, 5 0, 6 0}
+  (reduce (fn [acc [k v]]
+            (debug "card"[k v])
+            (let [winnings (subsequent-card-nums [k v])]
+              (debug "wins" (subsequent-card-nums [k v]))
+              (+ acc
+                 1                               ;; current card
+                 (state k)                       ;; original's winnings
+                 (reduce + (map state winnings)) ;; subsequent winnings
+                 ))) 0 state))
+
+(defn x [acc line] ;; returns card and copies with their count
+  (let [matching-numbers
+        (->> line
+             (re-seq split-bar)
+             first
+             ((juxt (comp numbers second) (comp numbers last)))
+             (apply set/intersection)
+             count)
+        card     (card-number line)
+        winnings (subsequent-card-nums [card matching-numbers])]
+    [card (into {} (map vec (partition 2 (interleave winnings (repeat (get acc card 1))))))]))
+
+
+(->>
+ (fetch-input 4)
+ read-lines
+ ;; input
+ (map (partial x {}))
+ #_(reduce
+  (fn [acc line]
+    (let [[_ copies-counts] (x acc line)]
+      (merge-with + acc copies-counts)))
+  {})
+ #_vals
+ #_(reduce +))
+;; => 17611239
+;; => 8707706
