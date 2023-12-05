@@ -22,7 +22,7 @@
      (reduce +))
 ;; => 25571
 
-(def input
+(def example
   [
 "Card 1: 41 48 83 86 17 | 83 86  6 31 17  9 48 53"
 "Card 2: 13 32 20 16 61 | 61 30 68 82 17 32 24 19"
@@ -37,10 +37,8 @@
        first last
        parse-long))
 
-(defn subsequent-card-nums [[card-number how-many]]
-  (cons card-number (take how-many (iterate inc (inc card-number)))))
-
-(defn debug [path x] (prn path x) x)
+(defn subsequent-card-nums [card-number how-many]
+  (take how-many (iterate inc (inc card-number))))
 
 (defn x [acc line] ;; returns card and copies with their count
   (let [matching-numbers
@@ -51,22 +49,17 @@
              (apply set/intersection)
              count)
         card     (card-number line)
-        winnings (subsequent-card-nums [card matching-numbers])]
-    [card (into {} (map vec (partition 2 (interleave winnings (repeat (get acc card 1))))))]))
-
+        winnings (subsequent-card-nums card matching-numbers)]
+    [card (into {} (map vec (partition 2 (interleave winnings (repeat (inc (get acc card 0)))))))]))
 
 (->>
  (fetch-input 4)
  read-lines
- ;; input
  (reduce
   (fn [acc line]
-    (let [[_ copies-counts] (x acc line)]
-      (merge-with + acc copies-counts)))
+    (let [[card copies-counts] (x acc line)]
+      (merge-with + acc {card 1} copies-counts)))
   {})
- sort
- #_vals
- #_(reduce +))
-;; => 17611239
-;; => 8707706
-(- 8805731 8707706);; => 98025
+ vals
+ (reduce +))
+;; => 8805731
