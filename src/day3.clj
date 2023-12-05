@@ -12,6 +12,11 @@
             "......755."
             "...$.*...."
             ".664.598.."])
+
+(defn x [x]
+  (for [[number row :as y] (map-indexed vector x)
+        [number character] (map-indexed vector row)]
+    []))
 (->> ["467..114.."
       "...*......"
       "..35..633."
@@ -23,10 +28,12 @@
       "...$.*...."
       ".664.598.."]
      (map-indexed vector)
-     (reduce
+     (map x)
+     #_(for [(map-indexed vector )])
+     #_(reduce
       (fn [acc [line input]]
         (for [[col number] (map-indexed vector input)]
-          (assoc acc col number))) {}))
+          (assoc acc [line col] number))) {}))
 (= [1 2] [1 2]) ;; => true
 (= [1 2] [2 1]) ;; => false
 (+ 467 35 633 617 592 755 664 598)
@@ -47,33 +54,50 @@
 (re-seq #"\d+(\.\d+)*" "467..114..")
 
 (->> #_(apply interleave '((\4 \6 \7 \. \. \1 \1 \4 \. \.) (\. \. \. \* \. \. \. \. \. \.))) ;; correct
-(apply interleave '((\. \. \. \* \. \. \. \. \. \.) (\. \. \3 \5 \. \. \6 \3 \3 \.))) ;; wrong
+
+#_(apply interleave '((\. \. \. \* \. \. \. \. \. \.) (\. \. \3 \5 \. \. \6 \3 \3 \.))) ;; wrong
 #_(apply interleave '((\6 \1 \7 \* \. \. \. \. \. \.) (\. \. \. \. \. \+ \. \5 \8 \.))) ;; wrong
 #_(apply interleave '((\. \. \. \. \. \+ \. \5 \8 \.) (\. \. \5 \9 \2 \. \. \. \. \.))) ;; wrong
 #_(apply interleave '((\. \. \. \$ \. \* \. \. \. \.) (\. \6 \6 \4 \. \5 \9 \8 \. \.))) ;; correct
      (partition 2)
-     #_(partition 2)
-     #_(map (partial map trim)) ;; remove 114 (number without symbol adjacent to it)
-     ;; (map (partial remove nil?)) ;; dots is now nil, remove dots (nils)
-     ;; (remove empty?)
-     ;; (map flatten)
-     ;; (partition 2) ;; join back
-     ;; (map (partial mapcat identity))
-     ;; (map (partial apply str))
+     (partition 2)
+     (map (partial map trim)) ;; remove 114 (number without symbol adjacent to it)
+     (map (partial remove nil?)) ;; dots is now nil, remove dots (nils)
+     (remove empty?)
+     (map flatten)
+     (partition 2) ;; join back
+     (map (partial mapcat identity))
+     (map (partial apply str))
      #_(map flatten))
 
+(let [rows ["467..114.."
+            "...*......"
+            "..35..633."
+            "......#..."
+            "617*......"
+            ".....+.58."
+            "..592....."
+            "......755."
+            "...$.*...."
+            ".664.598.."]]
+  (->>
+   (for [[y row] (map-indexed vector rows)
+         [x character] (map-indexed vector row)]
+     [[x y] character])
+   (into {})
+   (sort)))
 
 (defn pair [xs]
   (->> (apply interleave xs)
        (partition 2)
        (partition 2)
        (map (partial map trim))
-       (map (partial remove nil?))
-       (remove empty?)
-       (map flatten)
-       (partition 2)
-       (map (partial mapcat identity))
-       (map (partial apply str))))
+       ;; (map (partial remove nil?))
+       ;; (remove empty?)
+       ;; (map flatten)
+       ;; (partition 2)
+       ;; (map (partial mapcat identity))
+       #_(map (partial apply str))))
 
 (defn contains-symbol [xs]
   (letfn [(pred [x]
@@ -89,13 +113,13 @@
      (map seq)
      (partition 2 1)
      (map pair)
-     (map (partial filter contains-symbol))
-     (map flatten)
-     flatten
-     (map seq)
-     (map remove-symbol)
-     (map (partial apply str))
-     distinct
+     #_(map (partial filter contains-symbol))
+     #_(map flatten)
+     #_flatten
+     #_(map seq)
+     #_(map remove-symbol)
+     #_(map (partial apply str))
+     #_distinct
      #_(map remove-symbol))
 
 (->> input
@@ -147,9 +171,19 @@
      (map (partial map (partial apply str)))
      (map (partial apply interleave))
      (map (partial apply str))
-     (map #(str/replace % r7 "")) ;; remove dot only if adjacent to a number
-     ;; (map (partial re-seq r5))
+     ; (map #(str/replace % r7 "")) ;; remove dot only if adjacent to a number
+     (map (partial re-seq r5))
      ;; (map (juxt (comp first first) (comp first second)))
      ;; (mapcat (partial remove with-dot?))
      ;; (map (partial re-seq nums))
      #_(map (partial apply str)))
+
+(defn re-pos [re s]
+  (if (nil? re)
+    {}
+    (loop [m (re-matcher re s)
+           res {}]
+      (if (.find m)
+        (recur m (assoc res (.start m) (.group m)))
+        res))))
+(re-pos #"[^\d.]" ".......*.............*.....814...............$....*........../..94......*....=.............103............/..882*...........+...............")
