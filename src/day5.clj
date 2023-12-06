@@ -1,8 +1,5 @@
 (ns day5
-  (:require [clojure.string :as str]
-            [clojure.java.io :as io]))
-
-(def seed->soil {79 81 14 14 55 57 13 13})
+  (:require [clojure.java.io :as io]))
 
 (def example
 "seeds: 79 14 55 13
@@ -43,6 +40,7 @@ humidity-to-location map:
 (defn numbers [s]
   (map parse-long (re-seq #"\d+" s)))
 
+;; this approach is too slow; the input file may range from 2 mil to 300 mil and more
 (defn x [dest src n]
   (->> (interleave (range src (+ src n))
                    (range dest (+ dest n)))
@@ -50,25 +48,18 @@ humidity-to-location map:
        (map vec)
        (into {})))
 
-#_(def input (line-seq (io/reader (io/resource "day5.txt"))))
-#_(let [#_#_input (line-seq (io/reader (io/resource "day5.txt")))
-      head  (first input)
-      tail  (rest input)]
-  (->> tail
-       (filter (complement empty?))
-       (partition-by #(Character/isLetter (first %)))
-       #_#_#_#_#_
-       (map-indexed vector)
-       (remove (comp even? first))
-       (map second)
-       (map (partial map (comp (partial apply x) numbers)))
-       (map (partial apply merge))
-       ))
+(defn next-value [current m]
+  (let [found (filter (fn [[_ src n]]
+                        (<= src current (+ src n))) m)]
+    (if-let [[dest src _] (first found)]
+      (+ dest (- current src))
+      current)))
 
-#_(let [input () #_(str/split example #"\n")
+(let [input #_(str/split example #"\n")
+      (line-seq (io/reader (io/resource "day5.txt")))
+
       head  (first input)
       tail  (rest input)
-
       seeds (numbers head)
       mappings
       (->> tail
@@ -77,26 +68,8 @@ humidity-to-location map:
            (map-indexed vector)
            (remove (comp even? first))
            (map second)
-           (map (partial map (comp (partial apply x) numbers)))
-           (map (partial apply merge)))
-
-      mappings
-      (cons seed->soil
-            mappings)]
-
-  (apply min (reduce
-        (fn [acc seed]
-          (conj
-           acc
-           (reduce (fn [intermediate m]
-                     (prn "m:" (sort m))
-                     (prn "k:" intermediate)
-                     (prn "v:" (get m intermediate intermediate))
-                     (get m intermediate intermediate)) seed mappings)))
-        []
-        seeds)))
-
-
-
-#_(with-open [rdr (io/reader (io/resource "day5.txt"))]
-  (->> (line-seq rdr)))
+           (map (partial map (comp numbers))))]
+  (->> seeds
+       (map #(reduce next-value % mappings))
+       (apply min)))
+;; => 214922730
