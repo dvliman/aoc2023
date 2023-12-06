@@ -1,9 +1,8 @@
 (ns day5
-  (:require [day1 :refer [fetch-input read-lines]]
-            [clojure.string :as str]))
+  (:require [clojure.string :as str]
+            [clojure.java.io :as io]))
 
-(def seed->soil {79 81 14 14 55 13})
-
+(def seed->soil {79 81 14 14 55 57 13 13})
 
 (def example
 "seeds: 79 14 55 13
@@ -51,10 +50,26 @@ humidity-to-location map:
        (map vec)
        (into {})))
 
-(let [input (str/split example #"\n")
+#_(def input (line-seq (io/reader (io/resource "day5.txt"))))
+#_(let [#_#_input (line-seq (io/reader (io/resource "day5.txt")))
+      head  (first input)
+      tail  (rest input)]
+  (->> tail
+       (filter (complement empty?))
+       (partition-by #(Character/isLetter (first %)))
+       #_#_#_#_#_
+       (map-indexed vector)
+       (remove (comp even? first))
+       (map second)
+       (map (partial map (comp (partial apply x) numbers)))
+       (map (partial apply merge))
+       ))
+
+#_(let [input () #_(str/split example #"\n")
       head  (first input)
       tail  (rest input)
 
+      seeds (numbers head)
       mappings
       (->> tail
            (filter (complement empty?))
@@ -62,12 +77,26 @@ humidity-to-location map:
            (map-indexed vector)
            (remove (comp even? first))
            (map second)
-           (map (juxt
-                 (comp (partial apply x) numbers first)
-                 (comp (partial apply x) numbers second)))
+           (map (partial map (comp (partial apply x) numbers)))
            (map (partial apply merge)))
 
       mappings
       (cons seed->soil
             mappings)]
-  (numbers head))
+
+  (apply min (reduce
+        (fn [acc seed]
+          (conj
+           acc
+           (reduce (fn [intermediate m]
+                     (prn "m:" (sort m))
+                     (prn "k:" intermediate)
+                     (prn "v:" (get m intermediate intermediate))
+                     (get m intermediate intermediate)) seed mappings)))
+        []
+        seeds)))
+
+
+
+#_(with-open [rdr (io/reader (io/resource "day5.txt"))]
+  (->> (line-seq rdr)))
